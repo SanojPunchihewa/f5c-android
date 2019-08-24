@@ -1,4 +1,6 @@
 # f5c-android
+[![Build Status](https://travis-ci.com/SanojPunchihewa/f5c-android.svg?branch=master)](https://travis-ci.com/SanojPunchihewa/f5c-android)
+
 An optimised re-construction of the call-methylation module in [f5c](https://github.com/hasindu2008/f5c) for ARM-based mobile computing platforms.
 
 ## How to Build
