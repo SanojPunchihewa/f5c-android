@@ -10,6 +10,6 @@
 // If you want you can add other log definition for info, warning etc
 
 
-int init(int argc, char* argv[]);
+int init(int argc, char *argv[]);
 
 #endif

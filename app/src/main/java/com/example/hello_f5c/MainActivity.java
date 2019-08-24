@@ -1,37 +1,118 @@
 package com.example.hello_f5c;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.content.Context;
-import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.TextView;
-
-import java.lang.ref.WeakReference;
+import android.widget.EditText;
+import android.widget.Toast;
+import com.developer.filepicker.controller.DialogSelectionListener;
+import com.developer.filepicker.model.DialogConfigs;
+import com.developer.filepicker.model.DialogProperties;
+import com.developer.filepicker.view.FilePickerDialog;
+import java.io.File;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements
-        ActivityCompat.OnRequestPermissionsResultCallback,PermissionResultCallback{
+        ActivityCompat.OnRequestPermissionsResultCallback, PermissionResultCallback {
 
-    public Context context;
-    ArrayList<String> permissions = new ArrayList<>();  // Permission which are needed to get the app working (they are added in the onCreate function)
+    final static String TAG = "F5C-MAIN-ACTIVITY";
+
+    EditText editTextTestDataPath;
+
     PermissionUtils permissionUtils;                    // An instance of the permissionUtils
 
-    // Used to load the 'native-lib' library on application startup.
-    static {
-        System.loadLibrary("native-lib");
-    }
+    ArrayList<String> permissions = new ArrayList<>();
 
+    ProgressDialog progressDialog;
+    // Permission which are needed to get the app working (they are added in the onCreate function)
+
+    private String testDataPath;
+
+    public static native int init(String command);
+
+    @SuppressLint("ClickableViewAccessibility")
     @Override
-    public void onStart()
-    {
-        permissionUtils.check_permission(permissions,"The app needs storage permission for reading images and camera permission to take photos",1);
-        super.onStart();
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // Setup the permissions
+        permissionUtils = new PermissionUtils(MainActivity.this);
+        permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        editTextTestDataPath = findViewById(R.id.edit_text_data_path);
+        editTextTestDataPath.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                openFileManager();
+                return true;
+            }
+        });
+
+        findViewById(R.id.btn_run_index).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!TextUtils.isEmpty(testDataPath)) {
+                    showProgressWindow();
+                    Log.d(TAG, "f5c index started");
+                    int result = init(
+                            "f5c index -d " + testDataPath + "/fast5_files/ " + testDataPath + "/reads.fasta");
+                    Log.d(TAG, "f5c index ended " + result);
+                    hideProgressWindow();
+                } else {
+                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT)
+                            .show();
+                }
+            }
+        });
+
+        findViewById(R.id.btn_call_meth).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!TextUtils.isEmpty(testDataPath)) {
+                    showProgressWindow();
+                    Log.d(TAG, "f5c call-methylation started");
+                    int result = init("f5c call-methylation -b " + testDataPath + "/reads.sorted.bam -g " +
+                            testDataPath + "/draft.fa -r " + testDataPath
+                            + "/reads.fasta --secondary=yes --min-mapq=0 -B 2M > "
+                            + testDataPath + "/result.txt");
+//                int result = init("f5c meth-freq -i "+prefix_path+"test/ecoli_2kb_region/result.txt");
+                    Log.d(TAG, "f5c call-methylation ended " + result);
+                    hideProgressWindow();
+                } else {
+                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT)
+                            .show();
+                }
+
+            }
+        });
+
+        findViewById(R.id.btn_event_alignment).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!TextUtils.isEmpty(testDataPath)) {
+                    Log.d(TAG, "f5c eventalign started");
+                    int result = init("f5c eventalign -b " + testDataPath + "/reads.sorted.bam -g " + testDataPath
+                            + "/draft.fa -r " +
+                            testDataPath + "/reads.fasta --secondary=yes --min-mapq=0 -B 2M > "
+                            + testDataPath + "/5c_event_align.txt");
+                    Log.d(TAG, "f5c eventalign ended " + result);
+                    hideProgressWindow();
+                } else {
+                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT)
+                            .show();
+                }
+            }
+        });
+
     }
 
     /////////////////////////////
@@ -39,70 +120,44 @@ public class MainActivity extends AppCompatActivity implements
     /////////////////////////////
 
     @Override
+    public void onStart() {
+        permissionUtils.check_permission(permissions,
+                "The app needs storage permission for reading images and camera permission to take photos", 1);
+        super.onStart();
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+            @NonNull int[] grantResults) {
         // redirects to utils
-        permissionUtils.onRequestPermissionsResult(requestCode,permissions,grantResults);
+        permissionUtils.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void NeverAskAgain(int request_code) {
+        Log.i("PERMISSION", "NEVER ASK AGAIN");
+        permissionUtils.check_permission(permissions,
+                "The app needs storage permission for reading images and camera permission to take photos", 1);
+    }
+
+    @Override
+    public void PartialPermissionGranted(int request_code, ArrayList<String> granted_permissions) {
+        Log.i("PERMISSION PARTIALLY", "GRANTED");
+        permissionUtils.check_permission(permissions,
+                "The app needs storage permission for reading images and camera permission to take photos", 1);
+    }
+
+    @Override
+    public void PermissionDenied(int request_code) {
+        Log.i("PERMISSION", "DENIED");
+        permissionUtils.check_permission(permissions,
+                "The app needs storage permission for reading images and camera permission to take photos", 1);
     }
 
     // Callback functions
     @Override
     public void PermissionGranted(int request_code) {
-        Log.i("PERMISSION","GRANTED");
-    }
-
-    @Override
-    public void PartialPermissionGranted(int request_code, ArrayList<String> granted_permissions) {
-        Log.i("PERMISSION PARTIALLY","GRANTED");
-        permissionUtils.check_permission(permissions,"The app needs storage permission for reading images and camera permission to take photos",1);
-    }
-
-    @Override
-    public void PermissionDenied(int request_code) {
-        Log.i("PERMISSION","DENIED");
-        permissionUtils.check_permission(permissions,"The app needs storage permission for reading images and camera permission to take photos",1);
-    }
-
-    @Override
-    public void NeverAskAgain(int request_code) {
-        Log.i("PERMISSION","NEVER ASK AGAIN");
-        permissionUtils.check_permission(permissions,"The app needs storage permission for reading images and camera permission to take photos",1);
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        context = MainActivity.this;
-
-        // Example of a call to a native method
-        TextView tv = findViewById(R.id.sample_text);
-        tv.setText(stringFromJNI());
-
-        // Setup the permissions
-        permissionUtils = new PermissionUtils(MainActivity.this);
-        permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-
-        findViewById(R.id.button_runf5c).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String prefix_path = "/storage/emulated/0/f5c/";
-                // Code here executes on main thread after user presses button
-                Log.d("main","f5c running ");
-//                int result = init("f5c");
-//                int result = init("f5c index");
-//                int result = init("f5c index -d "+prefix_path+"test/ecoli_2kb_region/fast5_files/ "+prefix_path+"test/ecoli_2kb_region/reads.fasta");
-//                int result = init("f5c call-methylation -b "+prefix_path+"test/ecoli_2kb_region/reads.sorted.bam -g "+prefix_path+"test/ecoli_2kb_region/draft.fa -r "+prefix_path+"test/ecoli_2kb_region/reads.fasta --secondary=yes --min-mapq=0 -B 2M > "+prefix_path+"test/ecoli_2kb_region/result.txt");
-                int result = init("f5c eventalign -b "+prefix_path+"test/ecoli_2kb_region/reads.sorted.bam -g "+prefix_path+"test/ecoli_2kb_region/draft.fa -r "+prefix_path+"test/ecoli_2kb_region/reads.fasta --secondary=yes --min-mapq=0 -B 2M > "+prefix_path+"test/ecoli_2kb_region/f5c_event_align.txt");
-//                int result = init("f5c meth-freq -i "+prefix_path+"test/ecoli_2kb_region/result.txt");
-                Log.d("main","f5c ran " + result);
-            }
-        });
-//        int result = init("f5c");
-//        Log.d("main","f5c ran " + result);
-
+        Log.i("PERMISSION", "GRANTED");
     }
 
     /**
@@ -110,6 +165,47 @@ public class MainActivity extends AppCompatActivity implements
      * which is packaged with this application.
      */
     public native String stringFromJNI();
-    public static native int init(String command);
+
+    private void hideProgressWindow() {
+        progressDialog.dismiss();
+    }
+
+    private void openFileManager() {
+
+        DialogProperties properties = new DialogProperties();
+
+        properties.selection_mode = DialogConfigs.SINGLE_MODE;
+        properties.selection_type = DialogConfigs.DIR_SELECT;
+        properties.root = new File(DialogConfigs.DEFAULT_DIR);
+        properties.error_dir = new File(DialogConfigs.DEFAULT_DIR);
+        properties.offset = new File(DialogConfigs.DEFAULT_DIR);
+        properties.extensions = null;
+
+        FilePickerDialog dialog = new FilePickerDialog(MainActivity.this, properties);
+        dialog.setTitle("Select a Folder");
+
+        dialog.setDialogSelectionListener(new DialogSelectionListener() {
+            @Override
+            public void onSelectedFilePaths(String[] files) {
+                //files is the array of the paths of files selected by the Application User.
+                testDataPath = files[0];
+                editTextTestDataPath.setText(files[0]);
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void showProgressWindow() {
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("Running...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+    }
+
+    // Used to load the 'native-lib' library on application startup.
+    static {
+        System.loadLibrary("native-lib");
+    }
 
 }
