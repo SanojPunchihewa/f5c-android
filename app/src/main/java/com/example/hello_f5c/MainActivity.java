@@ -3,89 +3,40 @@ package com.example.hello_f5c;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.provider.DocumentsContract;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
-
 import com.developer.filepicker.controller.DialogSelectionListener;
 import com.developer.filepicker.model.DialogConfigs;
 import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
-
 import java.io.File;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements
-        ActivityCompat.OnRequestPermissionsResultCallback,PermissionResultCallback{
+        ActivityCompat.OnRequestPermissionsResultCallback, PermissionResultCallback {
 
     final static String TAG = "F5C-MAIN-ACTIVITY";
 
-    private String testDataPath;
     EditText editTextTestDataPath;
-    ProgressDialog progressDialog;
 
-    ArrayList<String> permissions = new ArrayList<>();  // Permission which are needed to get the app working (they are added in the onCreate function)
     PermissionUtils permissionUtils;                    // An instance of the permissionUtils
 
-    // Used to load the 'native-lib' library on application startup.
-    static {
-        System.loadLibrary("native-lib");
-    }
+    ArrayList<String> permissions = new ArrayList<>();
 
-    @Override
-    public void onStart()
-    {
-        permissionUtils.check_permission(permissions,"The app needs storage permission for reading images and camera permission to take photos",1);
-        super.onStart();
-    }
+    ProgressDialog progressDialog;
+    // Permission which are needed to get the app working (they are added in the onCreate function)
 
-    /////////////////////////////
-    // Permission functions
-    /////////////////////////////
+    private String testDataPath;
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        // redirects to utils
-        permissionUtils.onRequestPermissionsResult(requestCode,permissions,grantResults);
-    }
-
-    // Callback functions
-    @Override
-    public void PermissionGranted(int request_code) {
-        Log.i("PERMISSION","GRANTED");
-    }
-
-    @Override
-    public void PartialPermissionGranted(int request_code, ArrayList<String> granted_permissions) {
-        Log.i("PERMISSION PARTIALLY","GRANTED");
-        permissionUtils.check_permission(permissions,"The app needs storage permission for reading images and camera permission to take photos",1);
-    }
-
-    @Override
-    public void PermissionDenied(int request_code) {
-        Log.i("PERMISSION","DENIED");
-        permissionUtils.check_permission(permissions,"The app needs storage permission for reading images and camera permission to take photos",1);
-    }
-
-    @Override
-    public void NeverAskAgain(int request_code) {
-        Log.i("PERMISSION","NEVER ASK AGAIN");
-        permissionUtils.check_permission(permissions,"The app needs storage permission for reading images and camera permission to take photos",1);
-    }
+    public static native int init(String command);
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -109,14 +60,16 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.btn_run_index).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!TextUtils.isEmpty(testDataPath)){
+                if (!TextUtils.isEmpty(testDataPath)) {
                     showProgressWindow();
-                    Log.d(TAG,"f5c index started");
-                    int result = init("f5c index -d "+ testDataPath +"/fast5_files/ "+ testDataPath +"/reads.fasta");
-                    Log.d(TAG,"f5c index ended " + result);
+                    Log.d(TAG, "f5c index started");
+                    int result = init(
+                            "f5c index -d " + testDataPath + "/fast5_files/ " + testDataPath + "/reads.fasta");
+                    Log.d(TAG, "f5c index ended " + result);
                     hideProgressWindow();
                 } else {
-                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT)
+                            .show();
                 }
             }
         });
@@ -124,17 +77,19 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.btn_call_meth).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!TextUtils.isEmpty(testDataPath)){
+                if (!TextUtils.isEmpty(testDataPath)) {
                     showProgressWindow();
-                    Log.d(TAG,"f5c call-methylation started");
+                    Log.d(TAG, "f5c call-methylation started");
                     int result = init("f5c call-methylation -b " + testDataPath + "/reads.sorted.bam -g " +
-                            testDataPath + "/draft.fa -r " + testDataPath + "/reads.fasta --secondary=yes --min-mapq=0 -B 2M > "
+                            testDataPath + "/draft.fa -r " + testDataPath
+                            + "/reads.fasta --secondary=yes --min-mapq=0 -B 2M > "
                             + testDataPath + "/result.txt");
 //                int result = init("f5c meth-freq -i "+prefix_path+"test/ecoli_2kb_region/result.txt");
-                    Log.d(TAG,"f5c call-methylation ended " + result);
+                    Log.d(TAG, "f5c call-methylation ended " + result);
                     hideProgressWindow();
                 } else {
-                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT)
+                            .show();
                 }
 
             }
@@ -143,19 +98,66 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.btn_event_alignment).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!TextUtils.isEmpty(testDataPath)){
-                    Log.d(TAG,"f5c eventalign started");
-                    int result = init("f5c eventalign -b " + testDataPath + "/reads.sorted.bam -g " + testDataPath + "/draft.fa -r " +
+                if (!TextUtils.isEmpty(testDataPath)) {
+                    Log.d(TAG, "f5c eventalign started");
+                    int result = init("f5c eventalign -b " + testDataPath + "/reads.sorted.bam -g " + testDataPath
+                            + "/draft.fa -r " +
                             testDataPath + "/reads.fasta --secondary=yes --min-mapq=0 -B 2M > "
                             + testDataPath + "/5c_event_align.txt");
-                    Log.d(TAG,"f5c eventalign ended " + result);
+                    Log.d(TAG, "f5c eventalign ended " + result);
                     hideProgressWindow();
                 } else {
-                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT)
+                            .show();
                 }
             }
         });
 
+    }
+
+    /////////////////////////////
+    // Permission functions
+    /////////////////////////////
+
+    @Override
+    public void onStart() {
+        permissionUtils.check_permission(permissions,
+                "The app needs storage permission for reading images and camera permission to take photos", 1);
+        super.onStart();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
+        // redirects to utils
+        permissionUtils.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void NeverAskAgain(int request_code) {
+        Log.i("PERMISSION", "NEVER ASK AGAIN");
+        permissionUtils.check_permission(permissions,
+                "The app needs storage permission for reading images and camera permission to take photos", 1);
+    }
+
+    @Override
+    public void PartialPermissionGranted(int request_code, ArrayList<String> granted_permissions) {
+        Log.i("PERMISSION PARTIALLY", "GRANTED");
+        permissionUtils.check_permission(permissions,
+                "The app needs storage permission for reading images and camera permission to take photos", 1);
+    }
+
+    @Override
+    public void PermissionDenied(int request_code) {
+        Log.i("PERMISSION", "DENIED");
+        permissionUtils.check_permission(permissions,
+                "The app needs storage permission for reading images and camera permission to take photos", 1);
+    }
+
+    // Callback functions
+    @Override
+    public void PermissionGranted(int request_code) {
+        Log.i("PERMISSION", "GRANTED");
     }
 
     /**
@@ -163,9 +165,12 @@ public class MainActivity extends AppCompatActivity implements
      * which is packaged with this application.
      */
     public native String stringFromJNI();
-    public static native int init(String command);
 
-    private void openFileManager(){
+    private void hideProgressWindow() {
+        progressDialog.dismiss();
+    }
+
+    private void openFileManager() {
 
         DialogProperties properties = new DialogProperties();
 
@@ -176,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements
         properties.offset = new File(DialogConfigs.DEFAULT_DIR);
         properties.extensions = null;
 
-        FilePickerDialog dialog = new FilePickerDialog(MainActivity.this,properties);
+        FilePickerDialog dialog = new FilePickerDialog(MainActivity.this, properties);
         dialog.setTitle("Select a Folder");
 
         dialog.setDialogSelectionListener(new DialogSelectionListener() {
@@ -191,14 +196,16 @@ public class MainActivity extends AppCompatActivity implements
         dialog.show();
     }
 
-    private void showProgressWindow(){
+    private void showProgressWindow() {
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("Running...");
         progressDialog.setCancelable(false);
         progressDialog.show();
     }
-    private void hideProgressWindow(){
-        progressDialog.dismiss();
+
+    // Used to load the 'native-lib' library on application startup.
+    static {
+        System.loadLibrary("native-lib");
     }
 
 }
