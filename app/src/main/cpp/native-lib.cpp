@@ -45,7 +45,7 @@ Java_com_example_hello_1f5c_MainActivity_init(JNIEnv *env, jclass clazz, jstring
   // } CATCH_AND_RETHROW;
 }
 
-JNIEXPORT jint JNICALL
+extern "C" JNIEXPORT jint JNICALL
 Java_com_example_hello_1f5c_MainActivity_initminimap2(JNIEnv *env, jclass type, jstring command) {
   // try{TODO:exceptions
   // Convert command to cpp
