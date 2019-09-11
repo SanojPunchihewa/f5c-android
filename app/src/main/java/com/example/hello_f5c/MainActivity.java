@@ -40,6 +40,8 @@ public class MainActivity extends AppCompatActivity implements
 
     public static native int initminimap2(String command);
 
+    public static native int initsamtool(String command);
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,6 +161,41 @@ public class MainActivity extends AppCompatActivity implements
                             "minimap2 -I 8 -a " + testDataPath + "/ref.mmi " + testDataPath
                                     + "/reads.fasta -o "  + testDataPath + "/alignment.sam");
                     Log.d(TAG, "minimap2 alignment ended " + result);
+                    //hideProgressWindow();
+                } else {
+                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT)
+                            .show();
+                }
+            }
+        });
+
+        findViewById(R.id.btn_samtool_sort).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                if (!TextUtils.isEmpty(testDataPath)) {
+//                     testDataPath = "/mnt/sdcard/f5c/test/ecoli_2kb_region";
+                    Log.d(TAG, "samtool sort started");
+                    int result = initsamtool(
+                            "samtools sort " + testDataPath + "/reads.sorted.bam -o " + testDataPath
+                                    + "/samtoolsorted.bam");
+                    Log.d(TAG, "samtool sort ended " + result);
+                    //hideProgressWindow();
+                } else {
+                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT)
+                            .show();
+                }
+            }
+        });
+
+        findViewById(R.id.btn_samtool_index).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                if (!TextUtils.isEmpty(testDataPath)) {
+//                    testDataPath = "/mnt/sdcard/f5c/test/ecoli_2kb_region";
+                    Log.d(TAG, "samtool index started");
+                    int result = initsamtool(
+                            "samtools index " + testDataPath + "/samtoolsorted.bam");
+                    Log.d(TAG, "samtool index ended " + result);
                     //hideProgressWindow();
                 } else {
                     Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT)
