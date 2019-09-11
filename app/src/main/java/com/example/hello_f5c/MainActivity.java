@@ -38,6 +38,8 @@ public class MainActivity extends AppCompatActivity implements
 
     public static native int init(String command);
 
+    public static native int initminimap2(String command);
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +65,9 @@ public class MainActivity extends AppCompatActivity implements
                 if (!TextUtils.isEmpty(testDataPath)) {
                     showProgressWindow();
                     Log.d(TAG, "f5c index started");
+//                    int result = init(
+//                            "f5c index -d " + testDataPath + "/fast5_files/ " + testDataPath + "/reads.fasta");
+                    // index -d /media/sanoj/New\ Volume/chr22_meth_example/fast5_files /media/sanoj/New\ Volume/chr22_meth_example/reads.fastq
                     int result = init(
                             "f5c index -d " + testDataPath + "/fast5_files/ " + testDataPath + "/reads.fasta");
                     Log.d(TAG, "f5c index ended " + result);
@@ -80,10 +85,16 @@ public class MainActivity extends AppCompatActivity implements
                 if (!TextUtils.isEmpty(testDataPath)) {
                     showProgressWindow();
                     Log.d(TAG, "f5c call-methylation started");
+//                    int result = init("f5c call-methylation -b " + testDataPath + "/reads.sorted.bam -g " +
+//                            testDataPath + "/draft.fa -r " + testDataPath
+//                            + "/reads.fasta --secondary=yes --min-mapq=0 -B 2M > "
+//                            + testDataPath + "/result.txt");
+
                     int result = init("f5c call-methylation -b " + testDataPath + "/reads.sorted.bam -g " +
                             testDataPath + "/draft.fa -r " + testDataPath
                             + "/reads.fasta --secondary=yes --min-mapq=0 -B 2M > "
                             + testDataPath + "/result.txt");
+
 //                int result = init("f5c meth-freq -i "+prefix_path+"test/ecoli_2kb_region/result.txt");
                     Log.d(TAG, "f5c call-methylation ended " + result);
                     hideProgressWindow();
@@ -100,12 +111,55 @@ public class MainActivity extends AppCompatActivity implements
             public void onClick(View v) {
                 if (!TextUtils.isEmpty(testDataPath)) {
                     Log.d(TAG, "f5c eventalign started");
+//                    int result = init("f5c eventalign -b " + testDataPath + "/reads.sorted.bam -g " + testDataPath
+//                            + "/draft.fa -r " +
+//                            testDataPath + "/reads.fasta --secondary=yes --min-mapq=0 -B 2M > "
+//                            + testDataPath + "/f5c_event_align.txt");
+//                    ./f5c eventalign -b /media/sanoj/New\ Volume/chr22_meth_example/reads.sorted.bam
+//                    -g /media/sanoj/New\ Volume/chr22_meth_example/humangenome.fa
+//                    -r /media/sanoj/New\ Volume/chr22_meth_example/reads.fastq
+//                    --secondary=yes --min-mapq=0 -t 8 -B 2M
+//                    > /media/sanoj/New\ Volume/chr22_meth_example/f5c_event_align.txt
+
                     int result = init("f5c eventalign -b " + testDataPath + "/reads.sorted.bam -g " + testDataPath
                             + "/draft.fa -r " +
                             testDataPath + "/reads.fasta --secondary=yes --min-mapq=0 -B 2M > "
                             + testDataPath + "/5c_event_align.txt");
                     Log.d(TAG, "f5c eventalign ended " + result);
-                    hideProgressWindow();
+                    //hideProgressWindow();
+                } else {
+                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT)
+                            .show();
+                }
+            }
+        });
+
+        findViewById(R.id.btn_minimap2_index).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                if (!TextUtils.isEmpty(testDataPath)) {
+                    Log.d(TAG, "minimap2 index started");
+                    int result = initminimap2(
+                            "minimap2 -I 8 -d " + testDataPath + "/ref.mmi " + testDataPath + "/draft.fa");
+                    Log.d(TAG, "minimap2 index ended " + result);
+                    //hideProgressWindow();
+                } else {
+                    Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT)
+                            .show();
+                }
+            }
+        });
+
+        findViewById(R.id.btn_minimap2_alignment).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                if (!TextUtils.isEmpty(testDataPath)) {
+                    Log.d(TAG, "minimap2 alignment started");
+                    int result = initminimap2(
+                            "minimap2 -I 8 -a " + testDataPath + "/ref.mmi " + testDataPath
+                                    + "/reads.fasta -o "  + testDataPath + "/alignment.sam");
+                    Log.d(TAG, "minimap2 alignment ended " + result);
+                    //hideProgressWindow();
                 } else {
                     Toast.makeText(MainActivity.this, "Please select a data directory first", Toast.LENGTH_SHORT)
                             .show();
