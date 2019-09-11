@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements
                 if (!TextUtils.isEmpty(testDataPath)) {
                     Log.d(TAG, "minimap2 index started");
                     int result = initminimap2(
-                            "minimap2 -I 8 -d " + testDataPath + "/ref.mmi " + testDataPath + "/humangenome.fa");
+                            "minimap2 -I 8 -d " + testDataPath + "/ref.mmi " + testDataPath + "/draft.fa");
                     Log.d(TAG, "minimap2 index ended " + result);
                     //hideProgressWindow();
                 } else {
@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements
                     Log.d(TAG, "minimap2 alignment started");
                     int result = initminimap2(
                             "minimap2 -I 8 -a " + testDataPath + "/ref.mmi " + testDataPath
-                                    + "/reads.fastq");
+                                    + "/reads.fasta -o "  + testDataPath + "/alignment.sam");
                     Log.d(TAG, "minimap2 alignment ended " + result);
                     //hideProgressWindow();
                 } else {
