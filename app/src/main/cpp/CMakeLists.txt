@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.10.1)
 
 # Set the path to include directories
 include_directories(${CMAKE_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/minimap2)
 
 add_library( # Sets the name of the library.
         native-lib
@@ -27,6 +26,9 @@ set_target_properties(libf5c PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/..
 
 add_library(libminimap SHARED IMPORTED)
 set_target_properties(libminimap PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/../jniLibs/${ANDROID_ABI}/libminimapshared.so)
+
+add_library(libsamtool SHARED IMPORTED)
+set_target_properties(libsamtool PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/../jniLibs/${ANDROID_ABI}/libsamtoolshared.so)
 
 ## add needed libraries
 #add_library( libz1 SHARED IMPORTED )
@@ -49,4 +51,4 @@ find_library( # Sets the name of the path variable.
 # Specifies libraries CMake should link to your target library. You
 # can link multiple libraries, such as libraries you define in this
 # build script, prebuilt third-party libraries, or system libraries.
-target_link_libraries(native-lib libf5c libminimap ${log-lib})
+target_link_libraries(native-lib libf5c libminimap libsamtool ${log-lib})
